@@ -78,6 +78,24 @@ exports.update = asyncHandler(async (req, res, next) => {
             return next(new ErrorResponse('sorovlar bosh qolishi mumkin emas', 403))
         }
     }
+    if (req.query.query === 'ru') {
+        for (let worker of workers) {
+            const id = await Worker.findOne({ FIOkril: worker.worker }).select("_id")
+            if(!id){
+                return next(new ErrorResponse("server xatolik xodim topilmadi", 403))
+            }
+            worker.worker = id._id
+        }
+    }
+    if(req.query.query === 'uz') {
+        for (let worker of workers) {
+            const id = await Worker.findOne({ FIOlotin: worker.worker }).select("_id")
+            if(!id){
+                return next(new ErrorResponse("server xatolik xodim topilmadi", 403))
+            }
+            worker.worker = id
+        }
+    }
     const updateContract = await Contract.findByIdAndUpdate(req.params.id, {
         contractDate: new Date(contractDate),
         contractTurnOffDate: new Date(contractTurnOffDate),
