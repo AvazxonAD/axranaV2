@@ -52,20 +52,37 @@ exports.create = asyncHandler(async (req, res, next) => {
 // get element by id 
 exports.getById = asyncHandler(async (req, res, next) => {
     const contract = await Contract.findById(req.params.id).populate("workers.worker", "FIOlotin FIOkril")
+    const result = {
+        ...contract._doc,
+        contractDate: contract.contractDate.toISOString().split('T')[0],
+        contractTurnOffDate: contract.contractTurnOffDate.toISOString().split('T')[0]
+    };
     return res.status(200).json({
         success: true,
-        data: contract
+        data: result
     })
 })
 
 // get all contract 
 exports.getAllContract = asyncHandler(async (req, res, next) => {
-    const contracts = await Contract.find({ parent: req.user.id }).populate("workers.worker", "FIOlotin FIOkril")
+    const contracts = await Contract.find({ parent: req.user.id })
+        .populate("workers.worker", "FIOlotin FIOkril");
+    
+    // Sanalarni formatlash
+    const formattedContracts = contracts.map(contract => {
+        return {
+            ...contract._doc, // MongoDB ob'ektini to'g'ri olish uchun _doc dan foydalanish
+            contractDate: contract.contractDate.toISOString().split('T')[0],
+            contractTurnOffDate: contract.contractTurnOffDate.toISOString().split('T')[0]
+        };
+    });
+
     return res.status(200).json({
         success: true,
-        data: contracts
-    })
-})
+        data: formattedContracts
+    });
+});
+
 
 // update contract
 exports.update = asyncHandler(async (req, res, next) => {

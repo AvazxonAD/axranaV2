@@ -4,6 +4,7 @@ const Worker = require('../models/pasport.model')
 const Contract = require('../models/contract.model')
 const xlsx = require('xlsx')
 const path = require("path")
+const fs = require("fs")
 
 // result page 
 exports.result = asyncHandler(async (req, res, next) => {
@@ -124,6 +125,12 @@ exports.filter = asyncHandler(async (req, res, next) => {
 exports.excelCreate = asyncHandler(async (req, res) => {
     const { data } = req.body;
     const filePath = path.join(__dirname, '..', 'public', 'uploads');
+
+    // Fayl katalogining mavjudligini tekshirish va kerak bo'lsa yaratish
+    if (!fs.existsSync(filePath)) {
+        fs.mkdirSync(filePath, { recursive: true });
+    }
+
     const worksheet = xlsx.utils.json_to_sheet(data);
 
     worksheet['!cols'] = [
@@ -145,13 +152,29 @@ exports.excelCreate = asyncHandler(async (req, res) => {
 
     const workbook = xlsx.utils.book_new();
     xlsx.utils.book_append_sheet(workbook, worksheet, 'Ma\'lumotlar');
-    const filename = "/" + Date.now() + "/data.xslx"
+    
+    // Fayl nomini generatsiya qilish
+    const filename = Date.now() + "_data.xlsx";
     const outputPath = path.join(filePath, filename);
-    xlsx.writeFile(workbook, outputPath);
 
-    return  res.status(200).json({
-        success: true,
-        data: "yaratildi"
-    })
+    try {
+        // Faylni yozish
+        xlsx.writeFile(workbook, outputPath);
+
+        return res.download(outputPath, filename, (err) => {
+            if (err) {
+                console.error('Faylni yuklab olishda xatolik:', err);
+                res.status(500).send('Faylni yuklab olishda xatolik yuz berdi');
+            } else {
+                console.log('Fayl muvaffaqiyatli yuklab olindi');
+            }
+        });
+    } catch (err) {
+        return res.status(500).json({
+            success: false,
+            message: "Faylni yaratishda xatolik yuz berdi",
+            error: err.message
+        });
+    }
 });
 
