@@ -161,7 +161,7 @@ exports.excelCreate = asyncHandler(async (req, res) => {
         // Faylni yozish
         xlsx.writeFile(workbook, outputPath);
 
-        return res.download(outputPath, filename, (err) => {
+        return await res.download(outputPath, filename, (err) => {
             if (err) {
                 console.error('Faylni yuklab olishda xatolik:', err);
                 res.status(500).send('Faylni yuklab olishda xatolik yuz berdi');
